@@ -1,0 +1,46 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    // Users collection (gelecekte kullanılabilir)
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId);
+      allow delete: if false; // Kullanıcı silme yasak
+    }
+    
+    // Diary entries collection
+    match /entries/{entryId} {
+      // Sadece kendi yazılarını okuyabilir
+      allow read: if isAuthenticated() 
+                  && resource.data.userId == request.auth.uid;
+      
+      // Yeni yazı oluşturma
+      allow create: if isAuthenticated()
+                    && request.resource.data.userId == request.auth.uid
+                    && request.resource.data.isLocked == true
+                    && request.resource.data.keys().hasAll([
+                      'userId', 'title', 'content', 'createdAt', 
+                      'savedAt', 'isLocked', 'wordCount', 'characterCount'
+                    ]);
+      
+      // Update yasak (immutable - kaydedildikten sonra değiştirilemiyor)
+      allow update: if false;
+      
+      // Silme sadece sahibi yapabilir
+      allow delete: if isAuthenticated() 
+                    && resource.data.userId == request.auth.uid;
+    }
+  }
+}
