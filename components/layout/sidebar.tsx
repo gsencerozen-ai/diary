@@ -1,15 +1,15 @@
-'use client';
+"use client";
 
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
-import { EntryList } from '@/components/diary/entry-list';
-import { EntryFilter } from '@/components/diary/entry-filter';
-import { MoodStats } from '@/components/diary/mood-stats';
-import { PenSquare } from 'lucide-react';
-import type { DiaryEntryListItem } from '@/lib/types/diary';
-import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Button } from "@/components/ui/button";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { EntryList } from "@/components/diary/entry-list";
+import { EntryFilter } from "@/components/diary/entry-filter";
+import { MoodStats } from "@/components/diary/mood-stats";
+import { PenSquare } from "lucide-react";
+import type { DiaryEntryListItem } from "@/lib/types/diary";
+import { useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface SidebarProps {
   entries: DiaryEntryListItem[];
@@ -21,22 +21,37 @@ interface SidebarProps {
   onToggle: () => void;
 }
 
-export function Sidebar({ entries, selectedEntryId, onNewEntry, onSelectEntry, loading, isOpen, onToggle }: SidebarProps) {
-  const [filteredEntries, setFilteredEntries] = useState<DiaryEntryListItem[]>(entries || []);
+export function Sidebar({
+  entries,
+  selectedEntryId,
+  onNewEntry,
+  onSelectEntry,
+  loading,
+  isOpen,
+  onToggle,
+}: SidebarProps) {
+  const [filteredEntries, setFilteredEntries] = useState<DiaryEntryListItem[]>(
+    entries || []
+  );
 
-  // entries değiştiğinde filteredEntries'i update et
+  // Update filtered entries when entries change
   useEffect(() => {
     setFilteredEntries(entries || []);
   }, [entries]);
+  // Memoize the filter callback to prevent unnecessary re-renders
+  const handleFilter = useCallback((filtered: DiaryEntryListItem[]) => {
+    setFilteredEntries(filtered);
+  }, []);
 
-  const SidebarContent = () => (
-    <div className="flex flex-col h-full" role="navigation" aria-label="Günlük navigasyonu">
+  const sidebarContent = (
+    <div
+      className="flex flex-col h-full"
+      role="navigation"
+      aria-label="Günlük navigasyonu"
+    >
       <div className="p-4">
         <Button
-          onClick={() => {
-            onNewEntry();
-            onToggle();
-          }}
+          onClick={onNewEntry}
           className="w-full bg-terracotta-500 hover:bg-terracotta-600"
           aria-label="Yeni günlük yazısı oluştur"
         >
@@ -44,20 +59,16 @@ export function Sidebar({ entries, selectedEntryId, onNewEntry, onSelectEntry, l
           Yeni Günlük
         </Button>
       </div>
-
       <Separator className="bg-warm-200" />
-
       <div className="flex-1 p-4 min-h-0 flex flex-col gap-3 overflow-hidden">
         {/* Mood Stats */}
         <div className="flex-shrink-0">
           <MoodStats entries={entries || []} />
         </div>
-
         {/* Filter */}
         <div className="flex-shrink-0 border-t border-warm-200 pt-3">
-          <EntryFilter entries={entries || []} onFilter={setFilteredEntries} />
+          <EntryFilter entries={entries || []} onFilter={handleFilter} />
         </div>
-
         {/* Entries List */}
         <div className="flex-1 min-h-0 flex flex-col">
           <h2 className="font-heading font-semibold text-brown-800 mb-2">
@@ -67,10 +78,7 @@ export function Sidebar({ entries, selectedEntryId, onNewEntry, onSelectEntry, l
             <EntryList
               entries={filteredEntries}
               selectedEntryId={selectedEntryId}
-              onSelectEntry={(id) => {
-                onSelectEntry(id);
-                onToggle();
-              }}
+              onSelectEntry={onSelectEntry}
               loading={loading}
             />
           </ScrollArea>
@@ -78,7 +86,6 @@ export function Sidebar({ entries, selectedEntryId, onNewEntry, onSelectEntry, l
       </div>
     </div>
   );
-
   return (
     <>
       {/* Mobile Sidebar */}
@@ -99,7 +106,7 @@ export function Sidebar({ entries, selectedEntryId, onNewEntry, onSelectEntry, l
               transition={{ type: "spring", damping: 20 }}
               className="fixed left-0 top-[73px] bottom-0 w-72 bg-white border-r border-warm-200 z-50 lg:hidden"
             >
-              <SidebarContent />
+              {sidebarContent}
             </motion.aside>
           </>
         )}
@@ -107,7 +114,7 @@ export function Sidebar({ entries, selectedEntryId, onNewEntry, onSelectEntry, l
 
       {/* Desktop Sidebar */}
       <aside className="hidden lg:block w-80 border-r border-warm-200 bg-white h-[calc(100vh-73px)]">
-        <SidebarContent />
+        {sidebarContent}
       </aside>
     </>
   );

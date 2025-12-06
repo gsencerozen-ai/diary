@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
-import { motion } from 'framer-motion';
-import { Search, X } from 'lucide-react';
-import type { DiaryEntryListItem } from '@/lib/types/diary';
+import { useState, useMemo, useEffect } from "react";
+import { motion } from "framer-motion";
+import { Search, X } from "lucide-react";
+import type { DiaryEntryListItem } from "@/lib/types/diary";
 
 interface EntryFilterProps {
   entries: DiaryEntryListItem[];
@@ -11,22 +11,21 @@ interface EntryFilterProps {
 }
 
 export function EntryFilter({ entries, onFilter }: EntryFilterProps) {
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
 
   // Tüm unique tags'leri topla
   const allTags = useMemo(() => {
     const tags = new Set<string>();
-    entries.forEach(entry => {
-      entry.tags?.forEach(tag => tags.add(tag));
+    entries.forEach((entry) => {
+      entry.tags?.forEach((tag) => tags.add(tag));
     });
     return Array.from(tags).sort();
   }, [entries]);
-
   // Filter'lama logic
   const filteredEntries = useMemo(() => {
-    return entries.filter(entry => {
+    return entries.filter((entry) => {
       // Search filter
       if (searchTerm) {
         const search = searchTerm.toLowerCase();
@@ -45,10 +44,10 @@ export function EntryFilter({ entries, onFilter }: EntryFilterProps) {
     });
   }, [entries, searchTerm, selectedMood, selectedTag]);
 
-  // Filtered entries'i parent'a gönder
-  useMemo(() => {
+  // Filtered entries'i parent'a gönder - sadece filtre state'leri değiştiğinde
+  useEffect(() => {
     onFilter(filteredEntries);
-  }, [filteredEntries, onFilter]);
+  }, [filteredEntries]);
 
   return (
     <motion.div
@@ -69,7 +68,7 @@ export function EntryFilter({ entries, onFilter }: EntryFilterProps) {
         />
         {searchTerm && (
           <button
-            onClick={() => setSearchTerm('')}
+            onClick={() => setSearchTerm("")}
             className="absolute right-2 top-1/2 -translate-y-1/2 p-1 hover:bg-warm-100 rounded"
             aria-label="Aramayı temizle"
           >
@@ -81,16 +80,24 @@ export function EntryFilter({ entries, onFilter }: EntryFilterProps) {
       {/* Filter Badges */}
       <div className="flex flex-wrap gap-2">
         {/* Mood Filter */}
-        {['very-happy', 'happy', 'neutral', 'sad', 'very-sad'].map((mood) => {
-          const moodEmojis = { 'very-happy': '😄', 'happy': '😊', 'neutral': '😐', 'sad': '😢', 'very-sad': '😭' };
+        {["very-happy", "happy", "neutral", "sad", "very-sad"].map((mood) => {
+          const moodEmojis = {
+            "very-happy": "😄",
+            happy: "😊",
+            neutral: "😐",
+            sad: "😢",
+            "very-sad": "😭",
+          };
           return (
             <button
               key={mood}
-              onClick={() => setSelectedMood(selectedMood === mood ? null : mood)}
+              onClick={() =>
+                setSelectedMood(selectedMood === mood ? null : mood)
+              }
               className={`text-xl p-1 rounded transition-all ${
                 selectedMood === mood
-                  ? 'bg-terracotta-100 scale-110'
-                  : 'bg-warm-100 hover:bg-warm-200'
+                  ? "bg-terracotta-100 scale-110"
+                  : "bg-warm-100 hover:bg-warm-200"
               }`}
               title={`${mood} filtrele`}
               aria-pressed={selectedMood === mood}
@@ -111,8 +118,8 @@ export function EntryFilter({ entries, onFilter }: EntryFilterProps) {
               onClick={() => setSelectedTag(selectedTag === tag ? null : tag)}
               className={`text-xs px-2 py-1 rounded-full transition-all ${
                 selectedTag === tag
-                  ? 'bg-terracotta-500 text-white'
-                  : 'bg-warm-200 text-brown-800 hover:bg-warm-300'
+                  ? "bg-terracotta-500 text-white"
+                  : "bg-warm-200 text-brown-800 hover:bg-warm-300"
               }`}
               aria-pressed={selectedTag === tag}
               aria-label={`${tag} tag filtresi`}
